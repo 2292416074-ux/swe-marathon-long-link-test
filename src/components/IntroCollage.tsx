@@ -282,9 +282,9 @@ export const IntroProps: React.FC = () => {
         gearRotate={-6 + spin}
         gearSlide={20}
         gearFall={-10}
-        handLeft={-86}
+        handLeft={-593}
         handTop={792}
-        handWidth={668}
+        handWidth={1175}
         handRotate={-2}
         handFromY={150}
         hand="left"
@@ -298,7 +298,7 @@ export const IntroProps: React.FC = () => {
         gearFall={-245}
         handLeft={1016}
         handTop={716}
-        handWidth={700}
+        handWidth={1234}
         handRotate={1.5}
         handFromX={520}
         hand="right"
@@ -340,37 +340,3 @@ export const DottedChain: React.FC<{x: number; from: number; to: number}> = ({
   }
   return <>{dots}</>;
 };
-
-/** Torn dark photo edges that hold the composition in at the corners. */
-export const EdgeBands: React.FC = () => (
-  <>
-    <div
-      style={{
-        position: 'absolute',
-        left: -80,
-        top: 946,
-        width: 360,
-        height: 86,
-        background: '#191817',
-        transform: 'rotate(-4deg)',
-        filter: 'blur(0.4px)',
-        boxShadow: '0 -5px 0 rgba(196, 126, 30, 0.55)',
-        opacity: 0.9,
-      }}
-    />
-    <div
-      style={{
-        position: 'absolute',
-        left: 1748,
-        top: 720,
-        width: 260,
-        height: 240,
-        background: '#171615',
-        transform: 'rotate(2.5deg)',
-        filter: 'blur(0.5px)',
-        boxShadow: '0 -5px 0 rgba(200, 128, 30, 0.5)',
-        opacity: 0.85,
-      }}
-    />
-  </>
-);

@@ -71,35 +71,6 @@ export const FloatingDebris: React.FC = () => {
         />
       ))}
 
-      {/* torn photo edges, bottom corners */}
-      <div
-        style={{
-          position: 'absolute',
-          left: -90,
-          top: 986,
-          width: 340,
-          height: 120,
-          background: '#191817',
-          transform: `rotate(-4deg) translateY(${drift * 0.4}px)`,
-          boxShadow: '0 -6px 0 rgba(196, 126, 30, 0.6)',
-          filter: 'blur(1px)',
-          opacity: 0.82,
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          left: 1770,
-          top: 850,
-          width: 240,
-          height: 300,
-          background: '#171615',
-          transform: 'rotate(2.5deg)',
-          boxShadow: '0 -6px 0 rgba(200, 128, 30, 0.5)',
-          filter: 'blur(1.2px)',
-          opacity: 0.7,
-        }}
-      />
     </div>
   );
 };
