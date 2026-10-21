@@ -130,7 +130,7 @@ export const Gear: React.FC<{
       height: size * 1.073,
       transform: `rotate(${rotate}deg)`,
       mixBlendMode: 'multiply',
-      filter: `grayscale(1) contrast(1.06) brightness(1.03) blur(${blur}px)`,
+      filter: `grayscale(1) contrast(1.02) brightness(1.12) blur(${blur}px)`,
       opacity,
     }}
   />
@@ -206,17 +206,73 @@ export const EdgeBands: React.FC = () => (
 
 
 /**
- * The two in-focus gears belong to the opening page. They ride out of frame
- * with the camera pan (no opacity tricks) so the multiply blend stays clean.
+ * Gear resting in an open palm.
+ *
+ * In the reference the two cut-outs are a single prop: the palm carries the
+ * gear and the pair travels with the sheet as the camera pans. They are not
+ * screen-fixed foreground.
  */
-export const IntroGears: React.FC = () => {
+const GearPalm: React.FC<{
+  gearLeft: number;
+  gearTop: number;
+  gearSize: number;
+  gearRotate: number;
+  handLeft: number;
+  handTop: number;
+  handWidth: number;
+  handRotate: number;
+  hand: 'left' | 'right';
+  blur?: number;
+}> = ({gearLeft, gearTop, gearSize, gearRotate, handLeft, handTop, handWidth, handRotate, hand, blur = 0}) => (
+  <>
+    <Img
+      src={staticFile(`assets/hand-${hand}.png`)}
+      style={{
+        position: 'absolute',
+        left: handLeft,
+        top: handTop,
+        width: handWidth,
+        transform: `rotate(${handRotate}deg)`,
+        filter: `grayscale(1) contrast(1.02) brightness(1.12) blur(${blur}px)`,
+        opacity: 0.76,
+      }}
+    />
+    <Gear left={gearLeft} top={gearTop} size={gearSize} rotate={gearRotate} />
+  </>
+);
+
+/** The two opening props: small gear on the left palm, big gear on the right. */
+export const IntroProps: React.FC = () => {
   const frame = useCurrentFrame();
-  const spin = frame * 0.18;
+  const float = Math.sin(frame / 38) * 3;
+  const spin = frame * 0.14;
 
   return (
     <>
-      <Gear left={320} top={560} size={214} rotate={-6 + spin} />
-      <Gear left={1128} top={430} size={330} rotate={4 + spin * 0.6} />
+      <GearPalm
+        gearLeft={345}
+        gearTop={715 + float}
+        gearSize={212}
+        gearRotate={-6 + spin}
+        handLeft={120}
+        handTop={800}
+        handWidth={600}
+        handRotate={-2}
+        hand="left"
+        blur={1.5}
+      />
+      <GearPalm
+        gearLeft={1172}
+        gearTop={642 - float}
+        gearSize={296}
+        gearRotate={5 + spin * 0.6}
+        handLeft={1132}
+        handTop={700}
+        handWidth={612}
+        handRotate={1.5}
+        hand="right"
+        blur={1.5}
+      />
     </>
   );
 };

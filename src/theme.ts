@@ -44,9 +44,9 @@ export const POSTER = {
   width: 1920,
   height: 2600,
   /** Poster-space y of the table block (title sits at local y = 0). */
-  tableTop: 1037,
+  tableTop: 1440,
   /** Final camera offset; table title lands at screen y = 295. */
-  tableOffset: 742,
+  tableOffset: 1148,
 } as const;
 
 /** Table geometry, in table-local pixels (screen space at rest). */

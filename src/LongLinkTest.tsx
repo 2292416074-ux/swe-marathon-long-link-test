@@ -3,7 +3,7 @@ import {AbsoluteFill, useCurrentFrame} from 'remotion';
 import {POSTER, STAGE} from './theme';
 import {Camera} from './components/Camera';
 import {PaperStock} from './components/Paper';
-import {DottedChain, IntroGears, IntroTitle} from './components/IntroCollage';
+import {DottedChain, IntroProps, IntroTitle} from './components/IntroCollage';
 import {ScoreTable} from './components/ScoreTable';
 import {MarkerHighlight} from './components/Marker';
 import {Captions} from './components/Captions';
@@ -31,8 +31,8 @@ export const LongLinkTest: React.FC = () => {
 
           {/* ---- opening collage ---- */}
           <IntroTitle />
-          <IntroGears />
-          <DottedChain x={948} from={640} to={986} />
+          <IntroProps />
+          <DottedChain x={948} from={640} to={1400} />
 
           {/* ---- leaderboard ---- */}
           <div

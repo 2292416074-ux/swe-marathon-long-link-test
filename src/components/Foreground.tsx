@@ -9,16 +9,16 @@ import {Img, staticFile, useCurrentFrame, interpolate} from 'remotion';
  */
 export const FloatingDebris: React.FC = () => {
   const frame = useCurrentFrame();
-  const drift = Math.sin(frame / 48) * 6;
 
-  // hands sit closer to the lens than the sheet: they stay anchored to the
-  // bottom of frame while the poster pans, then defocus for the table.
-  const tableIn = interpolate(frame, [66, 96], [0, 1], {
+  // the table page has its own defocused props; they fade in as the first
+  // page (with its palm-and-gear pair) leaves the top of frame
+  const tableIn = interpolate(frame, [52, 74], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
-  const handOpacity = 0.78 - tableIn * 0.6;
-  const handBlur = 2.4 + tableIn * 9;
+  const drift = Math.sin(frame / 48) * 6 + (1 - tableIn) * 120;
+  const handOpacity = tableIn * 0.5;
+  const handBlur = 5 + tableIn * 6;
 
   const gears = [
     {left: -170, top: 640, size: 430, blur: 11, opacity: 0.26, rotate: 12},

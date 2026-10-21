@@ -28,8 +28,8 @@ const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 export const cameraOffset = (frame: number): number =>
   interpolate(
     frame,
-    [0, 20, 30, 45, 57, 65, 74, 88, 240],
-    [0, 0, 26, 170, 530, 648, 737, 752, 756],
+    [0, 20, 29, 43, 51, 57, 63, 72, 86, 240],
+    [0, 0, 26, 200, 540, 935, 1040, 1140, 1148, 1150],
     {...clamp, easing: Easing.inOut(Easing.cubic)},
   );
 
