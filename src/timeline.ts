@@ -1,90 +1,93 @@
 import {Easing, interpolate} from 'remotion';
+import {monotoneCubic} from './lib/spline';
 
 /**
- * Timeline of the 8 second piece.
+ * Timeline of the 8 second piece, in frames @30fps.
  *
- * 0.00 - 0.75  poster settles out of a punch-in (scale 1.24 -> 1.00)
- * 0.75 - 1.50  slow drift, title collage holds
- * 1.50 - 2.45  whip-pan up the poster, motion blur peaks
- * 2.00 - 3.10  table rows + scores land, staggered
- * 4.30 - 4.75  highlighter swipes the score column
- * 5.60 - 6.15  "也就是说" beat, then final hold
+ * The camera track is *measured* from the reference (following the red
+ * "Long link testing" kicker through scene 1 and the "SWE Marathon" header
+ * through scene 2), then interpolated with a monotone cubic spline so the
+ * velocity stays continuous through the whip-pan.
  */
+export const CAMERA_Y_KEYS: [number, number][] = [
+  [0, 95],
+  [8, 70],
+  [16, 50],
+  [24, 30],
+  [32, 10],
+  [36, 0],
+  [40, -50],
+  [44, -130],
+  [48, -265],
+  [52, -498],
+  [56, -758],
+  [60, -918],
+  [64, -998],
+  [68, -1050],
+  [72, -1074],
+  [84, -1086],
+  [239, -1100],
+];
+
+/** Total vertical travel of the reference camera (world -> screen). */
+export const CAMERA_TRAVEL = 1195;
+
+const cameraSpline = monotoneCubic(
+  CAMERA_Y_KEYS.map(([f]) => f),
+  CAMERA_Y_KEYS.map(([, y]) => y),
+);
+
+/** Reference camera position at a (possibly fractional) frame. */
+export const cameraY = (frame: number): number => cameraSpline(frame);
+
 export const BEATS = {
-  introHold: 22,
-  panStart: 45,
-  panEnd: 74,
-  settle: 96,
-  tableTitle: 46,
-  rowIn: [62, 70, 78],
-  scoreIn: [70, 79, 88],
-  markerSwipe: [130, 142],
-  finalHold: 186,
+  /** red kicker typewriter */
+  kickerStart: 0,
+  kickerCps: 0.9,
+  /** layered entrance settle durations */
+  titleSettle: [20, 16, 14] as const,
+  handSettle: 24,
+  gearSettle: 22,
+  /** table */
+  tableTitle: 48,
+  rowWipe: [55, 70, 86] as const,
+  scoreType: [66, 81, 97] as const,
+  wipeFrames: 7,
+  typeStep: 2,
+  /** highlighter wipe */
+  markerSwipe: [106, 126] as const,
+  /** hard cut to the presenter shot */
+  cutToSpeaker: 236,
 } as const;
-
-const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
-
-/** Piecewise camera pan down the poster. */
-export const cameraOffset = (frame: number): number =>
-  interpolate(
-    frame,
-    [0, 20, 29, 43, 51, 57, 63, 72, 86, 240],
-    [0, 0, 26, 200, 540, 935, 1040, 1140, 1148, 1150],
-    {...clamp, easing: Easing.inOut(Easing.cubic)},
-  );
-
-/** Punch-in that relaxes into the locked-off shot. */
-export const cameraScale = (frame: number): number =>
-  interpolate(frame, [0, 9, 20, 48, 96, 240], [1.24, 1.1, 1.0, 1.0, 1.0, 1.016], {
-    ...clamp,
-    easing: Easing.out(Easing.cubic),
-  });
-
-/** Paper sits a hair off-axis, like a photographed sheet. */
-export const cameraRotation = (frame: number): number =>
-  interpolate(frame, [0, 40, 90, 240], [1.9, 1.45, 1.25, 1.05], {
-    ...clamp,
-    easing: Easing.out(Easing.cubic),
-  });
-
-/**
- * Blur driven by the derivative of the pan: the reference is very soft through
- * the whip-pan and perfectly sharp once the table locks in.
- */
-export const cameraBlur = (frame: number): number => {
-  const v = Math.abs(cameraOffset(frame + 1) - cameraOffset(frame - 1)) / 2;
-  const zoom = Math.abs(cameraScale(frame + 1) - cameraScale(frame - 1)) / 2;
-  return Math.min(9, v * 0.115 + zoom * 900);
-};
 
 export type CaptionCue = {
   from: number;
   to: number;
   text: string;
-  /** Reference subtitle had a hard cut on some lines, a 4 frame fade on others. */
   fade?: number;
 };
 
-/** Captions transcribed from the reference, held in the same order. */
+/** Burned-in captions transcribed from the reference. */
 export const CAPTIONS: CaptionCue[] = [
-  {from: 0, to: 58, text: '在这项长链路的测试里边', fade: 6},
-  {from: 60, to: 88, text: 'K3拿了42分', fade: 4},
-  {from: 90, to: 166, text: '比Fable 5的35分高出了7分', fade: 4},
-  {from: 168, to: 184, text: '也就是说', fade: 3},
-  {from: 186, to: 240, text: 'K3赢的不只是页面做的好不好看', fade: 4},
+  {from: 0, to: 53, text: '在这项长链路的测试里边', fade: 4},
+  {from: 53, to: 89, text: 'K3拿了42分', fade: 3},
+  {from: 89, to: 159, text: '比Fable 5的35分高出了7分', fade: 3},
+  {from: 159, to: 175, text: '也就是说', fade: 2},
+  {from: 175, to: 240, text: 'K3赢的不只是页面做的好不好看', fade: 3},
 ];
 
 export type ScoreRow = {
   name: string;
   score: string;
-  /** Local y of the label's cap line. */
-  top: number;
+  fontSize: number;
+  left: number;
+  baseline: number;
 };
 
 export const ROWS: ScoreRow[] = [
-  {name: 'Kimi K3', score: '42.0', top: 153},
-  {name: 'Fable 5', score: '35.0', top: 293},
-  {name: 'GPT-5.6Sol', score: '39.0', top: 437},
+  {name: 'Kimi K3', score: '42.0', fontSize: 106, left: 400, baseline: 230},
+  {name: 'Fable 5', score: '35.0', fontSize: 106, left: 400, baseline: 370},
+  {name: 'GPT-5.6Sol', score: '39.0', fontSize: 91, left: 346, baseline: 508},
 ];
 
 /** Deterministic 0..1 jitter, used for hand-drawn edges. */
@@ -92,3 +95,22 @@ export const noise = (seed: number): number => {
   const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
   return x - Math.floor(x);
 };
+
+/** ease used by every entrance in the reference */
+export const EASE_SETTLE = Easing.bezier(0.16, 1, 0.3, 1);
+
+/** 0 -> 1 over `dur` frames with the reference's settle ease. */
+export const progress = (frame: number, dur: number): number =>
+  interpolate(frame, [0, dur], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EASE_SETTLE,
+  });
+
+/** Offset that settles from `from` to 0 over `dur` frames. */
+export const settle = (frame: number, dur: number, from: number): number =>
+  interpolate(frame, [0, dur], [from, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EASE_SETTLE,
+  });

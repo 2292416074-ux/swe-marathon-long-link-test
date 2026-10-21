@@ -22,11 +22,19 @@ across three baked plates, a projector vignette, and a touch of chromatic
 fringing. Everything is composited at 1920×1080 with a 0.45 px base softness so
 the render reads as a photographed print rather than flat UI.
 
-**Camera.** The whole collage lives on a 1920 × 2600 poster. A virtual camera
-punches in at 1.24×, relaxes to 1.0×, then whip-pans 752 px down the sheet to
-the leaderboard. The pan is velocity-driven: Gaussian blur and the settle are
-computed from the derivative of the camera track, which is why the whip-pan
-smears and the table snaps into focus.
+**Camera.** The collage lives on a 1920 × 2600 poster, but the track is not a
+hand-keyed curve: it is 17 points *tracked from the reference* and sampled with
+a monotone cubic spline (`src/lib/spline.ts`), so velocity stays continuous
+through the whip-pan instead of stepping at every keyframe. Blur is directional
+— an SVG `feGaussianBlur` with a vertical-only kernel, driven by the camera's
+frame-to-frame velocity — which is what makes the whip read as a camera move
+rather than a focus pull. A 1.02× push-in lands on the table afterwards.
+
+**Entrance.** The opening is not one zoom: 长 slides in from the left, 链路
+rises, 测试 drops in from the upper right with a −2° rotation, each with its own
+settle time and blur, while the gears fall into the palms and the red kicker is
+typed on at 0.9 chars/frame. All of them share one settle ease
+(`cubic-bezier(.16,1,.3,1)`).
 
 **Typography.** Black Songti for 长链路测试, italic Times for *SWE Marathon*,
 Arial Black for the leaderboard, Helvetica for the red *Long link testing*
@@ -37,12 +45,13 @@ fallbacks (see `src/theme.ts`).
 
 | Time | Beat |
 |---|---|
-| 0.00–0.75 | punch-in settles, ghosts mis-register, grain runs |
-| 0.75–1.50 | hold on the title collage; gears drift, hands breathe |
-| 1.50–2.45 | whip-pan down the poster with motion blur |
-| 1.85–3.10 | table title, rows and scores land in a stagger; scores reveal per glyph |
-| 4.30–4.75 | two ragged highlighter strokes wipe over 42.0 / 35.0 |
-| 5.60–6.15 | "也就是说" beat |
+| f0–20 | layered entrance: 长 from the left, 链路 from below, 测试 from upper right, chromatic split settles |
+| f0–36 | slow 95 px drift up the sheet |
+| f36–72 | whip-pan (measured spline), directional motion blur peaks near f52 |
+| f48–64 | table title, then row labels wipe in from the left |
+| f55–110 | scores typed on, 2 frames per character |
+| f106–126 | highlighter wipes down over 42.0 / 35.0 (slanted, ragged edge) |
+| f236–239 | hard cut to the presenter shot (placeholder gradient — no footage) |
 | 6.15–8.00 | final hold on the marked-up table |
 
 Captions are transcribed from the source and cut on the same beats:

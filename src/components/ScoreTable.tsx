@@ -1,40 +1,89 @@
 import React from 'react';
-import {AbsoluteFill, useCurrentFrame, interpolate, Easing} from 'remotion';
+import {AbsoluteFill, Easing, interpolate, useCurrentFrame} from 'remotion';
 import {COLORS, FONTS, TABLE} from '../theme';
 import {BEATS, ROWS} from '../timeline';
 
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 
 /**
- * Highlighter strokes are built as hand-wobbled polygons rather than a plain
- * rectangle: the reference marker has a slanted, ragged edge where the pen
- * lifts between rows.
+ * Row label wipes in left -> right through a clip, with a short horizontal
+ * jitter on the way in. In the reference the rows are not faded: they are
+ * *revealed*, as if the type were being printed.
  */
-const ScoreChars: React.FC<{text: string; start: number}> = ({text, start}) => {
-  const frame = useCurrentFrame();
+const RowLabel: React.FC<{frame: number; i: number}> = ({frame, i}) => {
+  const row = ROWS[i];
+  const start = BEATS.rowWipe[i];
+  const p = interpolate(
+    frame,
+    [start, start + BEATS.wipeFrames],
+    [0, 1],
+    {...clamp, easing: Easing.out(Easing.cubic)},
+  );
+  if (p <= 0) {
+    return null;
+  }
+  const jitter = p < 1 ? (1 - p) * (i % 2 === 0 ? 6 : -6) : 0;
+
   return (
-    <span style={{display: 'inline-flex'}}>
-      {text.split('').map((ch, i) => {
-        const t = start + i * 2.4;
-        const p = interpolate(frame, [t, t + 7], [0, 1], {
-          ...clamp,
-          easing: Easing.out(Easing.cubic),
-        });
-        return (
-          <span
-            key={`${ch}-${i}`}
-            style={{
-              display: 'inline-block',
-              opacity: p,
-              transform: `translateY(${(1 - p) * 26}px)`,
-              filter: p < 1 ? `blur(${(1 - p) * 7}px)` : undefined,
-            }}
-          >
-            {ch}
-          </span>
-        );
-      })}
-    </span>
+    <div
+      style={{
+        position: 'absolute',
+        left: row.left + jitter,
+        top: row.baseline - row.fontSize * 0.79,
+        fontFamily: FONTS.heavy,
+        fontWeight: 400,
+        fontSize: row.fontSize,
+        lineHeight: 1,
+        letterSpacing: '-0.035em',
+        transform: 'scaleX(1.07)',
+        transformOrigin: 'left center',
+        color: COLORS.ink,
+        whiteSpace: 'pre',
+        clipPath: `inset(-25% ${(1 - p) * 100}% -25% 0)`,
+      }}
+    >
+      {row.name}
+    </div>
+  );
+};
+
+/**
+ * Score digits are typed on at a fixed cadence. Untyped glyphs stay in the
+ * flow as invisible spacers, so the number never shifts while it is typing.
+ */
+const RowScore: React.FC<{frame: number; i: number}> = ({frame, i}) => {
+  const row = ROWS[i];
+  const start = BEATS.scoreType[i];
+  const n = frame < start ? 0 : Math.floor((frame - start) / BEATS.typeStep) + 1;
+  if (n <= 0) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        right: 1920 - TABLE.scoreRight,
+        top: row.baseline - 101 * 0.79 - 11,
+        fontFamily: FONTS.heavy,
+        fontWeight: 400,
+        fontSize: 101,
+        lineHeight: 1,
+        letterSpacing: '0.1em',
+        transform: 'scaleX(1.06)',
+        transformOrigin: 'right top',
+        color: COLORS.ink,
+        display: 'flex',
+        justifyContent: 'flex-end',
+        whiteSpace: 'pre',
+      }}
+    >
+      {row.score.split('').map((c, k) => (
+        <span key={`${c}-${k}`} style={{opacity: k < n ? 1 : 0}}>
+          {c}
+        </span>
+      ))}
+    </div>
   );
 };
 
@@ -73,7 +122,7 @@ export const ScoreTable: React.FC = () => {
         }}
       />
       {TABLE.rowRules.map((y, i) => {
-        const p = interpolate(frame, [BEATS.rowIn[i] - 2, BEATS.rowIn[i] + 8], [0, 1], clamp);
+        const p = interpolate(frame, [BEATS.rowWipe[i] - 2, BEATS.rowWipe[i] + 8], [0, 1], clamp);
         return (
           <div
             key={y}
@@ -95,7 +144,7 @@ export const ScoreTable: React.FC = () => {
         style={{
           position: 'absolute',
           left: 398,
-          top: TABLE.titleTop - 46,
+          top: TABLE.titleTop - 36,
           display: 'flex',
           alignItems: 'baseline',
           lineHeight: 1.2,
@@ -135,59 +184,12 @@ export const ScoreTable: React.FC = () => {
         </span>
       </div>
 
-      {/* rows */}
-      {ROWS.map((row, i) => {
-        const t0 = BEATS.rowIn[i];
-        const p = interpolate(frame, [t0, t0 + 13], [0, 1], {
-          ...clamp,
-          easing: Easing.out(Easing.cubic),
-        });
-        const baseline = [230, 370, 508][i];
-        const size = [106, 106, 91][i];
-        const left = [400, 400, 346][i];
-        return (
-          <React.Fragment key={row.name}>
-            <div
-              style={{
-                position: 'absolute',
-                left,
-                top: baseline - size * 0.79,
-                fontFamily: FONTS.heavy,
-                fontWeight: 400,
-                fontSize: size,
-                lineHeight: 1,
-                letterSpacing: '-0.035em',
-                transformOrigin: 'left center',
-                color: COLORS.ink,
-                opacity: p,
-                transform: `translateY(${(1 - p) * 34}px) scaleX(1.07)`,
-                filter: p < 1 ? `blur(${(1 - p) * 9}px)` : undefined,
-              }}
-            >
-              {row.name}
-            </div>
-            <div
-              style={{
-                position: 'absolute',
-                right: 1920 - TABLE.scoreRight,
-                top: baseline - 101 * 0.79 - 11,
-                fontFamily: FONTS.heavy,
-                fontWeight: 400,
-                fontSize: 101,
-                lineHeight: 1,
-                letterSpacing: '0.1em',
-                transform: 'scaleX(1.06)',
-                transformOrigin: 'right top',
-                color: COLORS.ink,
-                display: 'flex',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <ScoreChars text={row.score} start={BEATS.scoreIn[i]} />
-            </div>
-          </React.Fragment>
-        );
-      })}
+      {ROWS.map((row, i) => (
+        <React.Fragment key={row.name}>
+          <RowLabel frame={frame} i={i} />
+          <RowScore frame={frame} i={i} />
+        </React.Fragment>
+      ))}
     </AbsoluteFill>
   );
 };

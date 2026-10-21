@@ -1,6 +1,7 @@
 import React from 'react';
 import {Img, staticFile, useCurrentFrame} from 'remotion';
 import {COLORS, FONTS} from '../theme';
+import {BEATS, progress, settle} from '../timeline';
 
 /** One pass of the mis-registered screen print. */
 const Ghost: React.FC<{
@@ -25,87 +26,155 @@ const Ghost: React.FC<{
   </div>
 );
 
-const TitleRow: React.FC = () => (
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'baseline',
-      whiteSpace: 'nowrap',
-      color: COLORS.ink,
-      fontFamily: FONTS.serif,
-      fontWeight: 900,
-      lineHeight: 0.82,
-      letterSpacing: '-0.01em',
-    }}
-  >
-    <span style={{fontSize: 304}}>长</span>
-    <span style={{fontSize: 204, marginLeft: 38}}>链路</span>
-    <span style={{fontSize: 208, marginLeft: 48}}>测试</span>
-  </div>
-);
-
 /**
- * The opening lock-up: heavy Ming type, two offset print ghosts, a red italic
- * English kicker knocked out of the paper.
+ * One glyph group of the title: three print ghosts plus the solid pass,
+ * arriving from its own direction with its own settle time — the reference
+ * animates 长 / 链路 / 测试 independently, not as one block.
  */
-export const IntroTitle: React.FC = () => {
+const GlyphGroup: React.FC<{
+  text: string;
+  left: number;
+  top: number;
+  fontSize: number;
+  fromX?: number;
+  fromY?: number;
+  fromBlur?: number;
+  rotate?: number;
+  settleFrames: number;
+  chromatic?: number;
+}> = ({
+  text,
+  left,
+  top,
+  fontSize,
+  fromX = 0,
+  fromY = 0,
+  fromBlur = 0,
+  rotate = 0,
+  settleFrames,
+  chromatic = 0,
+}) => {
   const frame = useCurrentFrame();
-  const drift = Math.sin(frame / 26) * 3;
+  const s = progress(frame, settleFrames);
+  const dx = fromX * (1 - s);
+  const dy = fromY * (1 - s);
+  const blur = fromBlur * (1 - s);
+
+  const type: React.CSSProperties = {
+    fontFamily: FONTS.serif,
+    fontWeight: 900,
+    fontSize,
+    lineHeight: 0.82,
+    letterSpacing: '-0.01em',
+    color: COLORS.ink,
+    whiteSpace: 'nowrap',
+  };
 
   return (
     <div
       style={{
         position: 'absolute',
-        left: 298,
-        top: 246 + drift,
-        width: 1400,
-        height: 460,
+        left,
+        top,
+        transform: `translate(${dx}px, ${dy}px) rotate(${rotate}deg)`,
+        filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
+        opacity: Math.min(1, 0.55 + s * 1.6),
       }}
     >
       <Ghost dx={-18} dy={9} opacity={0.17} blur={0.4}>
-        <TitleRow />
+        <span style={type}>{text}</span>
       </Ghost>
       <Ghost dx={11} dy={-7} opacity={0.1} blur={0.3}>
-        <TitleRow />
+        <span style={type}>{text}</span>
       </Ghost>
       <Ghost dx={24} dy={4} opacity={0.05} blur={0.6}>
-        <TitleRow />
+        <span style={type}>{text}</span>
       </Ghost>
-
-      <div
+      <span
         style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          color: COLORS.ink,
+          ...type,
+          position: 'relative',
           textShadow:
-            '-2.5px 0 rgba(196, 36, 34, 0.42), 2.5px 0 rgba(36, 74, 132, 0.38), 0 0 1px rgba(0,0,0,0.35)',
+            chromatic > 0.3
+              ? `${-chromatic}px 0 rgba(0,90,255,0.55), ${chromatic}px 0 rgba(255,60,0,0.45)`
+              : '-2.5px 0 rgba(196, 36, 34, 0.28), 2.5px 0 rgba(36, 74, 132, 0.26)',
         }}
       >
-        <TitleRow />
-      </div>
+        {text}
+      </span>
+    </div>
+  );
+};
 
-      {/* red kicker */}
+/**
+ * The opening lock-up. Positions are poster-space and match the reference
+ * frame at rest; the entrance offsets come from tracking frames 0-20.
+ */
+export const IntroTitle: React.FC = () => {
+  const frame = useCurrentFrame();
+  const chromatic = settle(frame, 18, 9);
+  const chars = Math.max(
+    0,
+    Math.min(
+      'Long link testing'.length,
+      Math.floor((frame - BEATS.kickerStart) * BEATS.kickerCps) + 1,
+    ),
+  );
+
+  return (
+    <div style={{position: 'absolute', left: 0, top: 0, width: 1920, height: 1100}}>
+      <GlyphGroup
+        text="长"
+        left={330}
+        top={246}
+        fontSize={304}
+        fromX={-410}
+        fromBlur={6}
+        settleFrames={BEATS.titleSettle[0]}
+        chromatic={chromatic}
+      />
+      <GlyphGroup
+        text="链路"
+        left={660}
+        top={328}
+        fontSize={204}
+        fromY={160}
+        fromBlur={10}
+        settleFrames={BEATS.titleSettle[1]}
+        chromatic={chromatic * 0.8}
+      />
+      <GlyphGroup
+        text="测试"
+        left={1112}
+        top={324}
+        fontSize={208}
+        fromX={125}
+        fromY={115}
+        fromBlur={10}
+        rotate={-2}
+        settleFrames={BEATS.titleSettle[2]}
+        chromatic={chromatic * 0.8}
+      />
+
+      {/* red kicker, typed on */}
       <div
         style={{
           position: 'absolute',
-          left: 4,
-          top: 300,
+          left: 300,
+          top: 500,
           transform: 'rotate(-0.5deg) skewX(-11deg)',
           fontFamily: '"Helvetica Neue", "PingFang SC", Arial, sans-serif',
           fontWeight: 500,
-          fontStyle: 'normal',
-          fontSize: 88,
+          fontSize: 100,
           lineHeight: 1,
           letterSpacing: '0.015em',
           color: COLORS.red,
           WebkitTextStroke: '2px rgba(226, 223, 215, 0.7)',
           paintOrder: 'stroke fill',
-          textShadow: '0 2px 6px rgba(120, 20, 18, 0.18)',
-          whiteSpace: 'nowrap',
+          whiteSpace: 'pre',
         }}
       >
-        Long link testing
+        {'Long link testing'.slice(0, chars)}
       </div>
     </div>
   );
@@ -130,11 +199,113 @@ export const Gear: React.FC<{
       height: size * 1.073,
       transform: `rotate(${rotate}deg)`,
       mixBlendMode: 'multiply',
-      filter: `grayscale(1) contrast(1.02) brightness(1.12) blur(${blur}px)`,
+      filter: `grayscale(1) contrast(1.06) brightness(1.03) blur(${blur}px)`,
       opacity,
     }}
   />
 );
+
+/**
+ * Gear resting in an open palm — one prop that travels with the sheet.
+ * The gear settles later than the hand, so it drops into the palm.
+ */
+const GearPalm: React.FC<{
+  gearLeft: number;
+  gearTop: number;
+  gearSize: number;
+  gearRotate: number;
+  gearFall: number;
+  gearSlide: number;
+  handLeft: number;
+  handTop: number;
+  handWidth: number;
+  handRotate: number;
+  handFromX?: number;
+  handFromY?: number;
+  hand: 'left' | 'right';
+}> = ({
+  gearLeft,
+  gearTop,
+  gearSize,
+  gearRotate,
+  gearFall,
+  gearSlide,
+  handLeft,
+  handTop,
+  handWidth,
+  handRotate,
+  handFromX = 0,
+  handFromY = 0,
+  hand,
+}) => {
+  const frame = useCurrentFrame();
+  const hs = progress(frame, BEATS.handSettle);
+  const gs = progress(frame, BEATS.gearSettle);
+
+  return (
+    <>
+      <Img
+        src={staticFile(`assets/hand-${hand}.png`)}
+        style={{
+          position: 'absolute',
+          left: handLeft + handFromX * (1 - hs),
+          top: handTop + handFromY * (1 - hs),
+          width: handWidth,
+          transform: `rotate(${handRotate}deg)`,
+          filter: 'grayscale(1) contrast(1.02) brightness(1.12) blur(1.5px)',
+          opacity: 0.8 * Math.min(1, 0.5 + hs * 1.5),
+        }}
+      />
+      <Gear
+        left={gearLeft + gearSlide * (1 - gs)}
+        top={gearTop + gearFall * (1 - gs)}
+        size={gearSize}
+        rotate={gearRotate}
+        opacity={Math.min(1, 0.5 + gs * 1.5)}
+      />
+    </>
+  );
+};
+
+/** The two opening props: small gear on the left palm, big gear on the right. */
+export const IntroProps: React.FC = () => {
+  const frame = useCurrentFrame();
+  const float = Math.sin(frame / 38) * 3;
+  const spin = frame * 0.14;
+
+  return (
+    <>
+      <GearPalm
+        gearLeft={330}
+        gearTop={676 + float}
+        gearSize={202}
+        gearRotate={-6 + spin}
+        gearSlide={20}
+        gearFall={-10}
+        handLeft={-86}
+        handTop={792}
+        handWidth={668}
+        handRotate={-2}
+        handFromY={150}
+        hand="left"
+      />
+      <GearPalm
+        gearLeft={1160}
+        gearTop={506 - float}
+        gearSize={292}
+        gearRotate={5 + spin * 0.6}
+        gearSlide={10}
+        gearFall={-245}
+        handLeft={1016}
+        handTop={716}
+        handWidth={700}
+        handRotate={1.5}
+        handFromX={520}
+        hand="right"
+      />
+    </>
+  );
+};
 
 /**
  * The dotted "chain" that runs from the title down into the table. One line,
@@ -203,76 +374,3 @@ export const EdgeBands: React.FC = () => (
     />
   </>
 );
-
-
-/**
- * Gear resting in an open palm.
- *
- * In the reference the two cut-outs are a single prop: the palm carries the
- * gear and the pair travels with the sheet as the camera pans. They are not
- * screen-fixed foreground.
- */
-const GearPalm: React.FC<{
-  gearLeft: number;
-  gearTop: number;
-  gearSize: number;
-  gearRotate: number;
-  handLeft: number;
-  handTop: number;
-  handWidth: number;
-  handRotate: number;
-  hand: 'left' | 'right';
-  blur?: number;
-}> = ({gearLeft, gearTop, gearSize, gearRotate, handLeft, handTop, handWidth, handRotate, hand, blur = 0}) => (
-  <>
-    <Img
-      src={staticFile(`assets/hand-${hand}.png`)}
-      style={{
-        position: 'absolute',
-        left: handLeft,
-        top: handTop,
-        width: handWidth,
-        transform: `rotate(${handRotate}deg)`,
-        filter: `grayscale(1) contrast(1.02) brightness(1.12) blur(${blur}px)`,
-        opacity: 0.76,
-      }}
-    />
-    <Gear left={gearLeft} top={gearTop} size={gearSize} rotate={gearRotate} />
-  </>
-);
-
-/** The two opening props: small gear on the left palm, big gear on the right. */
-export const IntroProps: React.FC = () => {
-  const frame = useCurrentFrame();
-  const float = Math.sin(frame / 38) * 3;
-  const spin = frame * 0.14;
-
-  return (
-    <>
-      <GearPalm
-        gearLeft={330}
-        gearTop={676 + float}
-        gearSize={202}
-        gearRotate={-6 + spin}
-        handLeft={-86}
-        handTop={792}
-        handWidth={668}
-        handRotate={-2}
-        hand="left"
-        blur={1.5}
-      />
-      <GearPalm
-        gearLeft={1160}
-        gearTop={506 - float}
-        gearSize={292}
-        gearRotate={5 + spin * 0.6}
-        handLeft={1016}
-        handTop={716}
-        handWidth={700}
-        handRotate={1.5}
-        hand="right"
-        blur={1.5}
-      />
-    </>
-  );
-};

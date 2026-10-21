@@ -9,6 +9,21 @@ import {MarkerHighlight} from './components/Marker';
 import {Captions} from './components/Captions';
 import {FloatingDebris} from './components/Foreground';
 import {ChromaticEdges, FilmGrain, Haze, PrintScreen, Vignette} from './components/Paper';
+import {BEATS} from './timeline';
+
+/**
+ * Stand-in for the live-action presenter shot the reference cuts to for its
+ * last few frames. There is no footage here, so it is a deliberately neutral
+ * warm-room gradient — replace it with the real clip when available.
+ */
+const SpeakerPlaceholder: React.FC = () => (
+  <AbsoluteFill
+    style={{
+      background:
+        'radial-gradient(circle at 12% 42%, #ffb347 0%, #f08a1c 7%, rgba(240,138,28,0) 15%), linear-gradient(90deg, #6b6660 0%, #8a857e 35%, #77726b 70%, #3a3835 100%)',
+    }}
+  />
+);
 
 /**
  * "SWE Marathon — 长链路测试"
@@ -22,6 +37,17 @@ export const LongLinkTest: React.FC = () => {
 
   // projector exposure flicker (very subtle)
   const flicker = 1 + Math.sin(frame * 0.9) * 0.006 + Math.sin(frame * 2.3) * 0.004;
+
+  if (frame >= BEATS.cutToSpeaker) {
+    return (
+      <AbsoluteFill style={{overflow: 'hidden'}}>
+        <SpeakerPlaceholder />
+        <FilmGrain opacity={0.18} scale={0.62} />
+        <Vignette />
+        <Captions />
+      </AbsoluteFill>
+    );
+  }
 
   return (
     <AbsoluteFill style={{backgroundColor: '#c9c7c1', overflow: 'hidden'}}>
