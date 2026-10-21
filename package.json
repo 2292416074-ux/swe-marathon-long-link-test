@@ -1,0 +1,22 @@
+{
+  "name": "swe-marathon-long-link-test",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remotion recreation of the SWE Marathon long-horizon test motion graphic (paper-collage editorial style).",
+  "scripts": {
+    "dev": "remotion studio",
+    "render": "remotion render LongLinkTest out/long-link-test.mp4",
+    "still": "remotion still LongLinkTest out/poster.png --frame=150",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.406",
+    "remotion": "4.0.406",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.8",
+    "typescript": "5.8.3"
+  }
+}
