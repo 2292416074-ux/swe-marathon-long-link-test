@@ -38,9 +38,9 @@ const TitleRow: React.FC = () => (
       letterSpacing: '-0.01em',
     }}
   >
-    <span style={{fontSize: 316}}>长</span>
-    <span style={{fontSize: 212, marginLeft: 40}}>链路</span>
-    <span style={{fontSize: 216, marginLeft: 52}}>测试</span>
+    <span style={{fontSize: 304}}>长</span>
+    <span style={{fontSize: 204, marginLeft: 38}}>链路</span>
+    <span style={{fontSize: 208, marginLeft: 48}}>测试</span>
   </div>
 );
 
@@ -250,25 +250,25 @@ export const IntroProps: React.FC = () => {
   return (
     <>
       <GearPalm
-        gearLeft={345}
-        gearTop={715 + float}
-        gearSize={212}
+        gearLeft={330}
+        gearTop={676 + float}
+        gearSize={202}
         gearRotate={-6 + spin}
-        handLeft={120}
-        handTop={800}
-        handWidth={600}
+        handLeft={-86}
+        handTop={792}
+        handWidth={668}
         handRotate={-2}
         hand="left"
         blur={1.5}
       />
       <GearPalm
-        gearLeft={1172}
-        gearTop={642 - float}
-        gearSize={296}
+        gearLeft={1160}
+        gearTop={506 - float}
+        gearSize={292}
         gearRotate={5 + spin * 0.6}
-        handLeft={1132}
-        handTop={700}
-        handWidth={612}
+        handLeft={1016}
+        handTop={716}
+        handWidth={700}
         handRotate={1.5}
         hand="right"
         blur={1.5}

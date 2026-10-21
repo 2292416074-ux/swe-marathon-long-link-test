@@ -15,7 +15,7 @@ export const BEATS = {
   panStart: 45,
   panEnd: 74,
   settle: 96,
-  tableTitle: 56,
+  tableTitle: 46,
   rowIn: [62, 70, 78],
   scoreIn: [70, 79, 88],
   markerSwipe: [130, 142],
@@ -35,7 +35,7 @@ export const cameraOffset = (frame: number): number =>
 
 /** Punch-in that relaxes into the locked-off shot. */
 export const cameraScale = (frame: number): number =>
-  interpolate(frame, [0, 12, 26, 48, 96, 240], [1.24, 1.14, 1.045, 1.012, 1.0, 1.018], {
+  interpolate(frame, [0, 9, 20, 48, 96, 240], [1.24, 1.1, 1.0, 1.0, 1.0, 1.016], {
     ...clamp,
     easing: Easing.out(Easing.cubic),
   });
